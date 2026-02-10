@@ -2,18 +2,16 @@
 require_once __DIR__ . '/config.php';
 
 Flight::register('db', 'PDO', [
-    'mysql:host=127.0.0.1;dbname=takalo;charset=utf8', // TCP, pas socket
+    'mysql:host=127.0.0.1;dbname=takalo;charset=utf8',
     'root', 
     '', 
     [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]
-
 ]);
 
-
-// start session and auto-login / seed demo users
+// Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -22,29 +20,39 @@ Flight::set('flight.views.path', __DIR__ . '/views');
 
 try {
     $pdo = Flight::db();
-    $cnt = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
-    if ((int)$cnt === 0) {
-        $pwd = password_hash('password123', PASSWORD_DEFAULT);
-        $pdo->prepare("INSERT INTO users (nom, prenom, email, password_hash, telephone) VALUES (?,?,?,?,?)")
-                ->execute(['Alice','Dupont','alice@example.com',$pwd,'0600000001']);
-        $pdo->prepare("INSERT INTO users (nom, prenom, email, password_hash, telephone) VALUES (?,?,?,?,?)")
-                ->execute(['Bob','Martin','bob@example.com',$pwd,'0600000002']);
-    }
-    // ensure an admin backoffice user exists
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
-    $stmt->execute(['backoffice@example.com']);
+    
+    // Vérifier si un admin existe, sinon en créer un
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM utilisateur WHERE statut = 'admin'");
+    $stmt->execute();
+    
     if ((int)$stmt->fetchColumn() === 0) {
-      $pwdAdmin = password_hash('admin123', PASSWORD_DEFAULT);
-      $pdo->prepare("INSERT INTO users (nom, prenom, email, password_hash, telephone) VALUES (?,?,?,?,?)")
-          ->execute(['Backoffice','Admin','backoffice@example.com',$pwdAdmin,'0000000000']);
+        // Créer un admin par défaut (mot de passe en clair : "admin")
+        $pdo->prepare("INSERT INTO utilisateur (nom, prenom, email, password_hash, telephone, statut) VALUES (?,?,?,?,?,?)")
+            ->execute(['Admin', 'Système', 'admin@example.com', 'admin', '0123456789', 'admin']);
     }
-    // set session user id if not set
-    if (empty($_SESSION['user_id'])) {
-        $first = $pdo->query("SELECT id FROM users ORDER BY id LIMIT 1")->fetchColumn();
-        if ($first) $_SESSION['user_id'] = (int)$first;
+    
+    // Vérifier si des catégories existent, sinon les créer
+    $cnt = $pdo->query("SELECT COUNT(*) FROM categorie")->fetchColumn();
+    if ((int)$cnt === 0) {
+        $categories = [
+            ['Vêtements', 'Habits, chaussures, accessoires'],
+            ['Livres', 'Romans, BD, magazines'],
+            ['DVD/Blu-ray', 'Films et séries'],
+            ['Jeux vidéo', 'Consoles et jeux'],
+            ['Électronique', 'Appareils électroniques'],
+            ['Sport', 'Équipements sportifs'],
+            ['Décoration', 'Objets de décoration']
+        ];
+        
+        $stmt = $pdo->prepare("INSERT INTO categorie (nom, description) VALUES (?, ?)");
+        foreach ($categories as $cat) {
+            $stmt->execute($cat);
+        }
     }
+    
 } catch (Throwable $e) {
-    // ignore seeding errors in development
+    // Ignorer les erreurs de seeding en développement
+    // En production, vous devriez logger ces erreurs
 }
 
 require_once __DIR__ . '/routes.php';

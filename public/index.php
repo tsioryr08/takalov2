@@ -1,11 +1,15 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../app/bootstrap.php';
-//test
+require '../vendor/autoload.php';
+require '../app/bootstrap.php';  // ← Utilise votre bootstrap existant
+
+
+// Routes Admin
+Flight::route('GET /admin/login', ['AdminController', 'showLogin']);
+Flight::route('POST /admin/login', ['AdminController', 'processLogin']);
+Flight::route('GET /admin', ['AdminController', 'dashboard']);
+Flight::route('GET /admin/logout', ['AdminController', 'logout']);
+
+// Configurer le chemin des vues
+Flight::set('flight.views.path', '../app/views');
 
 Flight::start();
-
-

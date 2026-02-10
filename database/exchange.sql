@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS utilisateur (
 
 INSERT INTO utilisateur(nom, prenom, email, password_hash, telephone) VALUES
 ('admin','admin','admin@example.com','admin', '012345689');
+update utilisateur set statut = 'admin' where email = 'admin@example.com';
 
 -- Table catégorie (pour normaliser)
 CREATE TABLE IF NOT EXISTS categorie (
@@ -62,14 +63,13 @@ CREATE TABLE IF NOT EXISTS historique_echange (
 );
 
 -- Table pour les images multiples d'un objet
--- CREATE TABLE IF NOT EXISTS image_objet (
---     id INT AUTO_INCREMENT PRIMARY KEY,
---     objet_id INT NOT NULL,
---     url VARCHAR(255) NOT NULL,
---     ordre INT DEFAULT 0,
---     FOREIGN KEY (objet_id) REFERENCES objet(id) ON DELETE CASCADE,
---     INDEX idx_objet (objet_id)
--- );
+CREATE TABLE IF NOT EXISTS image_objet (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    objet_id INT NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    ordre INT DEFAULT 0,
+    FOREIGN KEY (objet_id) REFERENCES objet(id) ON DELETE CASCADE
+);
 
 -- Table pour les favoris/wishlist
 -- CREATE TABLE IF NOT EXISTS favori (

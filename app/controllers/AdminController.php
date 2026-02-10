@@ -1,106 +1,190 @@
 <?php
-class AdminController {
 
-  public static function showLogin() {
-    $pdo = Flight::db();
-    $loginVal = 'admin';
-    $pwdVal = 'admin';
-    $admin = null;
-
-    // Try to read from local `utilisateur` table
-    try {
-      $st = $pdo->prepare("SELECT id, nom, prenom, email, password_hash FROM utilisateur WHERE statut = 'admin' ORDER BY id LIMIT 1");
-      $st->execute();
-      $admin = $st->fetch(PDO::FETCH_ASSOC) ?: null;
-    } catch (Throwable $e) {
-      $admin = null;
-    }
-
-    // Do not use fully-qualified schema names; rely on configured DB
-    // if not found above, keep $admin === null
-
-    if ($admin) {
-      // Use `nom` as the login value per your request
-      $loginVal = $admin['nom'] ?? ($admin['email'] ?? ($admin['prenom'] ?? 'Backoffice'));
-      $raw = $admin['password_hash'] ?? '';
-      if ($raw !== '') {
-        // If stored as a hash (contains $), don't display it; otherwise display raw password
-        if (strpos($raw, '$') === false) {
-          $pwdVal = $raw;
+class AdminController
+{
+    // Afficher le formulaire de login
+    public static function showLogin()
+    {
+        // Si déjà connecté, rediriger
+        if (isset($_SESSION['admin_id'])) {
+            Flight::redirect('/admin');
+            return;
         }
-      }
+        
+        // 🎯 RÉCUPÉRER L'EMAIL ADMIN PAR DÉFAUT
+        $pdo = Flight::db();
+        $stmt = $pdo->query("SELECT email FROM utilisateur WHERE statut = 'admin' LIMIT 1");
+        $admin_default = $stmt->fetch();
+        $default_email = $admin_default ? $admin_default['email'] : '';
+        
+        // Passer les données à la vue
+        Flight::render('admin/login', [
+            'default_email' => $default_email,
+            'error' => $_SESSION['error'] ?? ''
+        ]);
+        
+        // Nettoyer l'erreur après affichage
+        unset($_SESSION['error']);
+    }
+    
+    // Traiter le formulaire de login
+    public static function processLogin()
+    {
+        $pdo = Flight::db();
+        
+        $email = trim($_POST['email'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+        
+        if (empty($email) || empty($password)) {
+            $_SESSION['error'] = 'Veuillez remplir tous les champs.';
+            Flight::redirect('/admin/login');
+            return;
+        }
+        
+        // Vérifier les identifiants (SANS HASH - comparaison directe)
+        $stmt = $pdo->prepare("SELECT * FROM utilisateur WHERE email = ? AND password_hash = ? AND statut = 'admin'");
+        $stmt->execute([$email, $password]);
+        $admin = $stmt->fetch();
+        
+        if ($admin) {
+            // Connexion réussie
+            $_SESSION['admin_id'] = $admin['id'];
+            $_SESSION['admin_nom'] = $admin['nom'];
+            $_SESSION['admin_prenom'] = $admin['prenom'];
+            $_SESSION['admin_email'] = $admin['email'];
+            
+            Flight::redirect('/admin');
+        } else {
+            $_SESSION['error'] = 'Email ou mot de passe incorrect.';
+            Flight::redirect('/admin/login');
+        }
+    }
+    
+    // Dashboard admin
+    public static function dashboard()
+    {
+        // Vérifier si admin connecté
+        if (!isset($_SESSION['admin_id'])) {
+            Flight::redirect('/admin/login');
+            return;
+        }
+        
+        $pdo = Flight::db();
+        
+        // Statistiques
+        $stats = [
+            'users' => $pdo->query("SELECT COUNT(*) FROM utilisateur WHERE statut='simple'")->fetchColumn(),
+            'categories' => $pdo->query("SELECT COUNT(*) FROM categorie")->fetchColumn(),
+            'objets' => $pdo->query("SELECT COUNT(*) FROM objet")->fetchColumn(),
+            'propositions' => $pdo->query("SELECT COUNT(*) FROM proposition_echange WHERE statut='en_attente'")->fetchColumn()
+        ];
+        
+        Flight::render('admin/dashboard', [
+            'stats' => $stats,
+            'admin' => $_SESSION
+        ]);
+    }
+    
+    // Déconnexion
+    public static function logout()
+    {
+        session_destroy();
+        Flight::redirect('/admin/login');
     }
 
-    Flight::render('admin/login', [
-      'values' => ['login' => $loginVal, 'password' => $pwdVal],
-      'errors' => ['_global'=>'','login'=>'','password'=>'']
-    ]);
-  }
-
-  public static function postLogin() {
-    if (session_status() === PHP_SESSION_NONE) session_start();
-    $pdo = Flight::db();
-    // locate admin in utilisateur table and set session directly (no auth)
-    try {
-      $st = $pdo->prepare("SELECT id FROM utilisateur WHERE statut = 'admin' ORDER BY id LIMIT 1");
-      $st->execute();
-      $admin = $st->fetch(PDO::FETCH_ASSOC);
-      if ($admin) {
-        $_SESSION['is_admin'] = true;
-        $_SESSION['user_id'] = (int)$admin['id'];
-      } else {
-        // fallback: mark admin without user id
-        $_SESSION['is_admin'] = true;
-      }
-    } catch (Throwable $e) {
-      $_SESSION['is_admin'] = true;
+    // Liste des catégories
+    public static function listCategories()
+    {
+        if (!isset($_SESSION['admin_id'])) {
+            Flight::redirect('/admin/login');
+            return;
+        }
+        
+        $pdo = Flight::db();
+        $repo = new CategoryRepository($pdo);
+        try {
+            $categories = $repo->getAll();
+        } catch (Throwable $e) {
+            $categories = [];
+        }
+        Flight::render('admin/categories', ['categories' => $categories]);
     }
-    Flight::redirect('/admin/categories');
-  }
 
-  public static function logout() {
-    if (session_status() === PHP_SESSION_NONE) session_start();
-    $_SESSION['is_admin'] = false;
-    Flight::redirect('/admin');
-  }
-
-  public static function listCategories() {
-    if (session_status() === PHP_SESSION_NONE) session_start();
-    if (empty($_SESSION['is_admin'])) {
-      Flight::redirect('/admin');
-      return;
+    // Créer une catégorie
+    public static function createCategory()
+    {
+        if (!isset($_SESSION['admin_id'])) {
+            Flight::redirect('/admin/login');
+            return;
+        }
+        
+        $req = Flight::request();
+        $name = trim((string)$req->data->name);
+        $desc = trim((string)$req->data->description);
+        $pdo = Flight::db();
+        $repo = new CategoryRepository($pdo);
+        if ($name !== '') {
+            try { 
+                $repo->create($name, $desc); 
+            } catch (Throwable $e) { 
+                /* ignore */ 
+            }
+        }
+        Flight::redirect('/admin/categories');
     }
-    $pdo = Flight::db();
-    $repo = new CategoryRepository($pdo);
-    try {
-      $categories = $repo->getAll();
-    } catch (Throwable $e) {
-      $categories = [];
+
+    // Afficher le formulaire d'édition d'une catégorie
+    public static function showEditCategory($id)
+    {
+        if (!isset($_SESSION['admin_id'])) {
+            Flight::redirect('/admin/login');
+            return;
+        }
+        
+        $pdo = Flight::db();
+        $repo = new CategoryRepository($pdo);
+        $category = $repo->getById((int)$id);
+        if (!$category) {
+            Flight::redirect('/admin/categories');
+            return;
+        }
+        Flight::render('admin/edit_category', ['category' => $category]);
     }
-    Flight::render('admin/categories', ['categories' => $categories]);
-  }
 
-  public static function createCategory() {
-    if (session_status() === PHP_SESSION_NONE) session_start();
-    if (empty($_SESSION['is_admin'])) { Flight::redirect('/admin'); return; }
-    $req = Flight::request();
-    $name = trim((string)$req->data->name);
-    $desc = trim((string)$req->data->description);
-    $pdo = Flight::db();
-    $repo = new CategoryRepository($pdo);
-    if ($name !== '') {
-      try { $repo->create($name, $desc); } catch (Throwable $e) { /* ignore */ }
+    // Mettre à jour une catégorie
+    public static function updateCategory($id)
+    {
+        if (!isset($_SESSION['admin_id'])) {
+            Flight::redirect('/admin/login');
+            return;
+        }
+        
+        $req = Flight::request();
+        $name = trim((string)$req->data->name);
+        $desc = trim((string)$req->data->description);
+        $pdo = Flight::db();
+        $repo = new CategoryRepository($pdo);
+        if ($name !== '') {
+            try { 
+                $repo->update((int)$id, $name, $desc); 
+            } catch (Throwable $e) { 
+                /* ignore */ 
+            }
+        }
+        Flight::redirect('/admin/categories');
     }
-    Flight::redirect('/admin/categories');
-  }
 
-  public static function deleteCategory($id) {
-    if (session_status() === PHP_SESSION_NONE) session_start();
-    if (empty($_SESSION['is_admin'])) { Flight::redirect('/admin'); return; }
-    $pdo = Flight::db();
-    $repo = new CategoryRepository($pdo);
-    $repo->delete((int)$id);
-    Flight::redirect('/admin/categories');
-  }
-
+    // Supprimer une catégorie
+    public static function deleteCategory($id)
+    {
+        if (!isset($_SESSION['admin_id'])) {
+            Flight::redirect('/admin/login');
+            return;
+        }
+        
+        $pdo = Flight::db();
+        $repo = new CategoryRepository($pdo);
+        $repo->delete((int)$id);
+        Flight::redirect('/admin/categories');
+    }
 }
