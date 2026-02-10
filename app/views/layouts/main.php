@@ -14,8 +14,8 @@
             --beige-primary: #D4C2A1;
             --beige-light: #E8DCC8;
             --beige-pale: #F5F0E8;
-            --beige-accent: #D5CD90;     /* Nouvelle couleur */
-            --brown-dark: #3B341F;        /* Nouvelle couleur */
+            --beige-accent: #D5CD90;    
+            --brown-dark: #3B341F;        
             --white: #FFFFFF;
             --text-dark: #2C2C2C;
             --text-medium: #666666;
@@ -220,7 +220,6 @@
         <?php echo $content; ?>
     </main>
 
-    <!-- Footer -->
    <!-- Footer -->
     <footer class="text-center">
         <div class="container">
@@ -231,7 +230,7 @@
                 </div>
                 <div class="col-md-12">
                     <div style="background-color: rgba(255,255,255,0.2); padding: 1rem; border-radius: 8px; display: inline-block;">
-                        <small style="font-weight: 500;">Développé par :</small><br>
+                        
                         <small>ETU004184 - ETU003966 - ETU003941</small>
                     </div>
                 </div>

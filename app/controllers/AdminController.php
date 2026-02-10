@@ -5,25 +5,23 @@ class AdminController
     // Afficher le formulaire de login
     public static function showLogin()
     {
-        // Si déjà connecté, rediriger
+        // Si dejà connecte, rediriger
         if (isset($_SESSION['admin_id'])) {
             Flight::redirect('/admin');
             return;
         }
-        
-        // 🎯 RÉCUPÉRER L'EMAIL ADMIN PAR DÉFAUT
+
         $pdo = Flight::db();
         $stmt = $pdo->query("SELECT email FROM utilisateur WHERE statut = 'admin' LIMIT 1");
         $admin_default = $stmt->fetch();
         $default_email = $admin_default ? $admin_default['email'] : '';
         
-        // Passer les données à la vue
+        // Passer les donnees à la vue
         Flight::render('admin/login', [
             'default_email' => $default_email,
             'error' => $_SESSION['error'] ?? ''
         ]);
-        
-        // Nettoyer l'erreur après affichage
+
         unset($_SESSION['error']);
     }
     
@@ -41,13 +39,12 @@ class AdminController
             return;
         }
         
-        // Vérifier les identifiants (SANS HASH - comparaison directe)
         $stmt = $pdo->prepare("SELECT * FROM utilisateur WHERE email = ? AND password_hash = ? AND statut = 'admin'");
         $stmt->execute([$email, $password]);
         $admin = $stmt->fetch();
         
         if ($admin) {
-            // Connexion réussie
+            // Connexion reussie
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_nom'] = $admin['nom'];
             $_SESSION['admin_prenom'] = $admin['prenom'];
@@ -63,7 +60,7 @@ class AdminController
     // Dashboard admin
     public static function dashboard()
     {
-        // Vérifier si admin connecté
+        // Verifier si admin connecte
         if (!isset($_SESSION['admin_id'])) {
             Flight::redirect('/admin/login');
             return;
@@ -71,28 +68,24 @@ class AdminController
         
         $pdo = Flight::db();
         
-        // Statistiques
+        // Statistiques - UNIQUEMENT categories
         $stats = [
-            'users' => $pdo->query("SELECT COUNT(*) FROM utilisateur WHERE statut='simple'")->fetchColumn(),
-            'categories' => $pdo->query("SELECT COUNT(*) FROM categorie")->fetchColumn(),
-            'objets' => $pdo->query("SELECT COUNT(*) FROM objet")->fetchColumn(),
-            'propositions' => $pdo->query("SELECT COUNT(*) FROM proposition_echange WHERE statut='en_attente'")->fetchColumn()
+            'categories' => $pdo->query("SELECT COUNT(*) FROM categorie")->fetchColumn()
         ];
         
-        Flight::render('admin/dashboard', [
-            'stats' => $stats,
-            'admin' => $_SESSION
+        Flight::render('admin/dashboard_simple', [
+            'stats' => $stats
         ]);
     }
     
-    // Déconnexion
+    // Deconnexion
     public static function logout()
     {
         session_destroy();
         Flight::redirect('/admin/login');
     }
 
-    // Liste des catégories
+    // Liste des categories
     public static function listCategories()
     {
         if (!isset($_SESSION['admin_id'])) {
@@ -110,7 +103,7 @@ class AdminController
         Flight::render('admin/categories', ['categories' => $categories]);
     }
 
-    // Créer une catégorie
+    // Creer une categorie
     public static function createCategory()
     {
         if (!isset($_SESSION['admin_id'])) {
@@ -133,7 +126,7 @@ class AdminController
         Flight::redirect('/admin/categories');
     }
 
-    // Afficher le formulaire d'édition d'une catégorie
+    // Afficher le formulaire d'edition d'une categorie
     public static function showEditCategory($id)
     {
         if (!isset($_SESSION['admin_id'])) {
@@ -151,7 +144,7 @@ class AdminController
         Flight::render('admin/edit_category', ['category' => $category]);
     }
 
-    // Mettre à jour une catégorie
+    // Mettre à jour une categorie
     public static function updateCategory($id)
     {
         if (!isset($_SESSION['admin_id'])) {
@@ -174,7 +167,7 @@ class AdminController
         Flight::redirect('/admin/categories');
     }
 
-    // Supprimer une catégorie
+    // Supprimer une categorie
     public static function deleteCategory($id)
     {
         if (!isset($_SESSION['admin_id'])) {
