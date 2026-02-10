@@ -1,0 +1,307 @@
+
+[ ] Integrer le template Bootstrap Admin dans FlightMVC
+    Source: https://github.com/puikinsh/Bootstrap-Admin-Template
+    
+    [OK] etape 1: Preparation de l'environnement
+        - [ ok] Recuperer le lien vers le repository GitHub(1min)
+ 
+    [ ok] etape 2: Installation des dependances
+        - [Ok] Installer Composer sur le systeme (5min)
+        - [ ok] Executer `composer install` pour installer les dependances (1min)
+        - [ok ] Verifier l'apparition du dossier vendor/ dans le projet(2sec)
+        - [ ok] Verifier l'autoload de Composer(2sec)
+    
+    [ok] etape 3: Migration des fichiers statiques
+        - [OK] Copier le repertoire assets/ du template vers public/assets/ (2min)
+        - [ OK] Migrer les fichiers CSS (bootstrap.min.css vers public/css/)(1min)
+    
+    [ok] etape 4: Adaptation du fichier messages.html
+        - [ok] Copier messages.html du template vers app/views/auth/(20s)
+        - [ok] Renommer messages.html en message.php(2sec)
+        - [ ok] Convertir le HTML statique en PHP dynamique (1min)
+        - [ok] Adapter les chemins des assets (CSS, JS) pour FlightMVC(5min)
+    
+    [ok] etape 5: Configuration de FlightMVC
+        - [ok] Creer app/bootstrap.php pour initialiser FlightMVC(1mn)
+        - [ok] Creer app/config.php pour la configuration de la base de donnees(2min)
+        - [ok] Creer app/routes.php pour definir les routes(2min)
+        - [ok] Creer public/index.php comme point d'entree
+                .asina chemin '/../vendor/autoload.php' & '/../app/bootstrap.php';(2min)
+        - [ok] Configurer la connexion PDO à la base de donnees(1min)
+    
+    [ok] etape 6: Test de l'integration
+        - [ ok] Verifier que les assets se chargent correctement
+        - [ ok] Verifier l'affichage de la page messages
+
+
+PHASE 2: FONCTIONNALITeS DE L'APPLICATION
+
+[ ] FONCTIONNALITe 1: SYSTeME D'AUTHENTIFICATION (AUTO LOGIN)
+    [ ]Design login
+        -[ok]integrer template login de forms.html dans public/login.php
+        
+    
+    [ ] etape 1: Creation de la base de donnees
+        - [ ok] Creation de la table users:(3min)
+
+    [ok] etape 2: Creation du Repository User
+        - [ ok] Creer UserRepository.php dans app/repositories/()
+        - [ok ] Implementer le constructeur avec PDO
+        - [ ok] Creer la methode emailExists($email) pour recuperer un user
+        - [ok ] Creer la methode create() pour inserer un nouvel utilisateur
+        - [ ok] Creer la methode getAll() pour lister tous les users
+    
+    [ok] etape 3: Creation du Service User
+        - [ ok] Creer app/services/UserService.php ()
+        - [ ok] Injecter UserRepository dans le constructeur
+    
+    [ ] etape 4: Creation du Validator
+        - [ok] Creer app/services/Validator.php pour gerer la validation des champs lors de l'inscription(10min)
+        - [ok] Implementer validateRegister() pour valider l'inscription(7mn)
+        - [ok] Implementer validateLogin() pour valider le login(3mn)
+        - [ ] Valider le format email
+        - [ ] Valider la force du mot de passe
+        - [ ] Valider la confirmation du mot de passe
+        - [ ] Valider le numero de telephone
+        - [ ] Verifier l'unicite de l'email
+    
+    [ ] etape 5: Creation du Controller Auth
+        - [ ] Creer app/controllers/AuthController.php
+        - [ ] Implementer showLogin() pour afficher le formulaire de login
+        - [ ] Implementer postLogin() pour traiter le formulaire
+        - [ ] Implementer showRegister() pour afficher l'inscription
+        - [ ] Implementer postRegister() pour traiter l'inscription
+        - [ ] Implementer validateRegisterAjax() pour validation AJAX
+        - [ ] Implementer logout() pour deconnecter l'utilisateur
+    
+    [ ] etape 6: Gestion des sessions
+        - [ ] Demarrer la session avec session_start()
+        - [ ] Stocker l'ID utilisateur dans $_SESSION['user_id']
+        - [ ] Stocker l'email dans $_SESSION['email']
+        - [ ] Verifier la session dans chaque page protegee
+        - [ ] Rediriger vers /login si non authentifie
+        - [ ] Detruire la session lors du logout
+    
+    [ ] etape 7: Creation des vues de login/register
+        - [ ] Creer app/views/auth/login.php
+        - [ ] Creer le formulaire de login (email, password)
+        - [ ] Afficher les erreurs de validation
+        - [ ] Creer app/views/auth/register.php
+        - [ ] Creer le formulaire d'inscription (nom, prenom, email, etc.)
+        - [ ] Implementer la validation AJAX en temps reel
+        - [ ] Afficher les messages de succes/erreur
+    
+    [ ] etape 8: Configuration des routes
+        - [ ] Ajouter GET /login dans routes.php
+        - [ ] Ajouter POST /login dans routes.php
+        - [ ] Ajouter GET /register dans routes.php
+        - [ ] Ajouter POST /register dans routes.php
+        - [ ] Ajouter POST /api/validate/register pour AJAX
+        - [ ] Ajouter GET /logout dans routes.php
+        - [ ] Require les controllers et services necessaires
+    
+    [ ] etape 9: Tests de l'authentification
+        - [ ] Tester l'inscription d'un nouvel utilisateur
+        - [ ] Verifier le hashage du mot de passe en base
+        - [ ] Tester la connexion avec des identifiants valides
+        - [ ] Tester la connexion avec des identifiants invalides
+        - [ ] Verifier la redirection apres login reussi
+        - [ ] Tester la validation AJAX du formulaire
+        - [ ] Tester le logout et la destruction de session
+        - [ ] Verifier la protection des pages (redirection si non connecte)
+
+
+[ ] FONCTIONNALITe 2: SYSTeME DE MESSAGERIE ENTRE UTILISATEURS
+    
+    [ ] etape 1: Creation de la table messages
+        - [ ] Modifier database/schema.sql
+        - [ ] Definir la structure de la table messages:
+            * id (INT, AUTO_INCREMENT, PRIMARY KEY)
+            * sender_id (INT, FOREIGN KEY vers users)
+            * receiver_id (INT, FOREIGN KEY vers users)
+            * content (TEXT)
+            * is_read (TINYINT, DEFAULT 0)
+            * created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+        - [ ] Ajouter les contraintes de cles etrangeres
+        - [ ] Executer le script SQL pour creer la table
+        - [ ] Verifier la creation de la table messages
+    
+    [ ] etape 2: Creation du Repository Message
+        - [ ] Creer app/repositories/MessageRepository.php
+        - [ ] Implementer le constructeur avec PDO
+        - [ ] Creer getConversationsForUser($userId) pour recuperer toutes les conversations
+        - [ ] Creer getInboxForUser($userId) pour recuperer les messages reçus
+        - [ ] Creer getUnreadCount($userId) pour compter les non lus
+        - [ ] Creer markAllAsRead($userId) pour marquer comme lu
+        - [ ] Creer create($senderId, $receiverId, $content) pour envoyer
+        - [ ] Faire des jointures avec la table users pour recuperer les noms
+        - [ ] Gerer les exceptions et erreurs PDO
+    
+    [ ] etape 3: Creation du Service Message
+        - [ ] Creer app/services/MessageService.php
+        - [ ] Injecter MessageRepository dans le constructeur
+        - [ ] Creer conversations($userId) pour obtenir les conversations
+        - [ ] Creer inbox($userId) pour obtenir la boîte de reception
+        - [ ] Creer unreadCount($userId) pour le compteur de non lus
+        - [ ] Creer markReadAll($userId) pour marquer tout comme lu
+        - [ ] Creer send($senderId, $receiverId, $content) pour envoyer
+    
+    [ ] etape 4: Creation du Controller Message
+        - [ ] Creer app/controllers/MessageController.php
+        - [ ] Implementer showMessages() pour afficher la page messages
+        - [ ] Verifier l'authentification de l'utilisateur
+        - [ ] Recuperer tous les utilisateurs pour la liste
+        - [ ] Recuperer toutes les conversations de l'utilisateur
+        - [ ] Recuperer le compteur de messages non lus
+        - [ ] Marquer tous les messages comme lus lors de l'affichage
+        - [ ] Passer les donnees à la vue
+        - [ ] Implementer sendMessage() pour envoyer un message
+        - [ ] Valider les donnees (receiver_id, content)
+        - [ ] Gerer les requêtes AJAX et les requêtes classiques
+        - [ ] Retourner une reponse JSON ou rediriger
+        - [ ] Implementer refreshMessages() pour le rafraîchissement
+        - [ ] Retourner les nouveaux messages en JSON
+    
+    [ ] etape 5: Adaptation de la vue message.php
+        - [ ] Preparer les donnees PHP en haut du fichier
+        - [ ] Creer le tableau $conversationsData depuis $messages
+        - [ ] Determiner l'interlocuteur pour chaque message
+        - [ ] Grouper les messages par conversation
+        - [ ] Generer les avatars SVG dynamiquement
+        - [ ] Calculer les messages non lus par conversation
+        - [ ] Calculer le total de messages non lus
+        - [ ] Afficher le badge de notification dans le header
+        - [ ] Creer la liste des conversations dans la sidebar
+        - [ ] Afficher les messages dans le chat
+        - [ ] Distinguer les messages envoyes vs reçus (classe CSS)
+        - [ ] Afficher l'heure de chaque message
+        - [ ] Creer le formulaire d'envoi de message
+        - [ ] Creer la liste deroulante des utilisateurs destinataires
+        - [ ] Integrer le nom de l'utilisateur connecte dans l'interface
+    
+    [ ] etape 6: Creation du JavaScript pour l'interactivite
+        - [ ] Creer/adapter public/js/validation-ajax.js si necessaire
+        - [ ] Implementer l'envoi de message en AJAX
+        - [ ] Creer la fonction pour envoyer le message (POST /messages/send)
+        - [ ] Gerer la reponse JSON du serveur
+        - [ ] Afficher le nouveau message instantanement dans l'interface
+        - [ ] Vider le formulaire apres envoi
+        - [ ] Gerer les erreurs d'envoi
+        - [ ] Implementer le bouton "Rafraîchir"
+        - [ ] Creer la fonction refreshMessages() pour GET /messages/refresh
+        - [ ] Mettre à jour la liste des messages sans recharger la page
+        - [ ] Mettre à jour le compteur de non lus
+        - [ ] Optionnel: Ajouter un auto-refresh toutes les X secondes
+    
+    [ ] etape 7: Configuration des routes
+        - [ ] Ajouter GET /messages dans routes.php
+        - [ ] Ajouter POST /messages/send dans routes.php
+        - [ ] Ajouter GET /messages/refresh dans routes.php
+        - [ ] Require MessageController, MessageRepository, MessageService
+        - [ ] Verifier que UserRepository est bien charge
+    
+    [ ] etape 8: Tests de la messagerie
+        - [ ] Se connecter avec un utilisateur
+        - [ ] Acceder à la page /messages
+        - [ ] Verifier l'affichage de la liste des utilisateurs
+        - [ ] Tester l'envoi d'un message à un autre utilisateur
+        - [ ] Verifier l'insertion en base de donnees
+        - [ ] Se connecter avec le destinataire
+        - [ ] Verifier la reception du message
+        - [ ] Verifier le compteur de messages non lus
+        - [ ] Verifier le marquage comme lu apres affichage
+        - [ ] Tester le bouton rafraîchir
+        - [ ] Verifier la mise à jour sans rechargement de page
+        - [ ] Tester l'envoi de multiples messages
+        - [ ] Verifier le groupement par conversation
+        - [ ] Tester l'affichage des messages envoyes vs reçus
+
+
+[ ] FONCTIONNALITe 3: SYSTeME DE MESSAGES LUS/NON LUS
+    
+    [ ] etape 1: Structure de base de donnees
+        - [ ] Verifier la colonne is_read dans la table messages
+        - [ ] S'assurer que la valeur par defaut est 0 (non lu)
+        - [ ] Tester l'insertion avec is_read = 0
+    
+    [ ] etape 2: Logique de marquage comme lu
+        - [ ] Dans MessageRepository, implementer markAllAsRead()
+        - [ ] Creer une requête UPDATE pour is_read = 1
+        - [ ] Filtrer par receiver_id = utilisateur connecte
+        - [ ] Ne marquer que les messages is_read = 0
+    
+    [ ] etape 3: Integration dans le Controller
+        - [ ] Dans showMessages(), appeler markReadAll() apres recuperation
+        - [ ] S'assurer que les messages sont marques comme lus à l'affichage
+        - [ ] Mettre à jour le compteur apres marquage
+    
+    [ ] etape 4: Affichage visuel du statut lu/non lu
+        - [ ] Dans message.php, afficher un indicateur pour les non lus
+        - [ ] Ajouter une classe CSS pour les messages non lus
+        - [ ] Optionnel: Badge de compteur sur chaque conversation
+        - [ ] Badge total dans la navbar
+    
+    [ ] etape 5: Compteur de messages non lus
+        - [ ] Dans MessageRepository, implementer getUnreadCount()
+        - [ ] Requête COUNT(*) WHERE receiver_id = ? AND is_read = 0
+        - [ ] Afficher le compteur dans le header
+        - [ ] Afficher le compteur par conversation
+    
+    [ ] etape 6: Tests du systeme lu/non lu
+        - [ ] Envoyer un message d'un user A vers user B
+        - [ ] Se connecter avec user B
+        - [ ] Verifier que le compteur affiche 1 nouveau message
+        - [ ] Acceder à /messages
+        - [ ] Verifier que le message est marque comme lu
+        - [ ] Verifier que le compteur passe à 0
+        - [ ] Rafraîchir la page et verifier que le compteur reste à 0
+
+
+[ ] FONCTIONNALITe 4: BOUTON RAFRAÎCHIR LES MESSAGES
+    
+    [ ] etape 1: Backend - Endpoint de rafraîchissement
+        - [ ] Dans MessageController, creer refreshMessages()
+        - [ ] Verifier l'authentification de l'utilisateur
+        - [ ] Recuperer les messages via MessageService
+        - [ ] Recuperer le compteur de non lus
+        - [ ] Retourner une reponse JSON avec messages et unread
+    
+    [ ] etape 2: Frontend - Interface du bouton
+        - [ ] Ajouter un bouton "Rafraîchir" dans message.php
+        - [ ] Positionner le bouton dans l'interface (header ou toolbar)
+        - [ ] Ajouter une icône de rafraîchissement (Bootstrap Icons)
+        - [ ] Optionnel: Ajouter une animation de chargement
+    
+    [ ] etape 3: Frontend - JavaScript
+        - [ ] Creer la fonction refreshMessages() en JavaScript
+        - [ ] Faire un appel AJAX GET vers /messages/refresh
+        - [ ] Recuperer la reponse JSON
+        - [ ] Parser les nouveaux messages
+        - [ ] Mettre à jour l'interface sans recharger la page
+        - [ ] Mettre à jour la liste des conversations
+        - [ ] Mettre à jour le compteur de non lus
+        - [ ] Afficher les nouveaux messages dans le chat actif
+        - [ ] Optionnel: Faire defiler vers les nouveaux messages
+        - [ ] Gerer les erreurs reseau
+    
+    [ ] etape 4: Amelioration UX
+        - [ ] Ajouter un feedback visuel au clic (spinner)
+        - [ ] Desactiver le bouton pendant le chargement
+        - [ ] Afficher un message "Chargement..." ou animation
+        - [ ] Reactiver le bouton apres mise à jour
+        - [ ] Optionnel: Notification sonore pour nouveaux messages
+        - [ ] Optionnel: Badge clignotant sur nouveaux messages
+    
+    [ ] etape 5: Tests du rafraîchissement
+        - [ ] Ouvrir /messages avec user A
+        - [ ] Dans un autre navigateur, envoyer un message à user A
+        - [ ] Cliquer sur le bouton rafraîchir dans le navigateur de user A
+        - [ ] Verifier l'apparition du nouveau message sans F5
+        - [ ] Verifier la mise à jour du compteur
+        - [ ] Tester avec plusieurs messages simultanes
+        - [ ] Tester le comportement en cas d'erreur reseau
+
+
+
+
+AUTOLOGIN: EMAIL FOTSINY
