@@ -9,8 +9,7 @@ ob_start();
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h2 style="font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; font-family:'serif';">
-                       
-                        Gestion des Catégories
+                        Statistiques & Gestion
                     </h2>
                     <p style="color: var(--text-medium); margin: 0; font-size: 1rem;">
                         Backoffice Takalo-Takalo
@@ -25,18 +24,57 @@ ob_start();
         </div>
     </div>
 
-
-    <div class="card mb-4" style="border: 2px solid var(--beige-light);">
-        <div class="card-body p-5 text-center">
-            <div style="font-size: 3.5rem; color: var(--beige-accent); margin-bottom: 1rem;">
-                <i class="fas fa-folder-open"></i>
+    <!-- Statistiques en 3 colonnes -->
+    <div class="row g-4 mb-4">
+        <!-- Catégories -->
+        <div class="col-md-4">
+            <div class="card" style="border: 2px solid var(--beige-light);">
+                <div class="card-body p-4 text-center">
+                    <div style="font-size: 2.5rem; color: var(--beige-accent); margin-bottom: 1rem;">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3 style="font-size: 2.2rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem;">
+                        <?php echo $stats['categories']; ?>
+                    </h3>
+                    <p style="color: var(--text-medium); font-size: 1rem; margin: 0;">
+                        Catégorie(s)
+                    </p>
+                </div>
             </div>
-            <h3 style="font-size: 3rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem;">
-                <?php echo $stats['categories']; ?>
-            </h3>
-            <p style="color: var(--text-medium); font-size: 1.2rem; margin: 0;">
-                Catégorie(s) enregistrée(s)
-            </p>
+        </div>
+
+        <!-- Utilisateurs inscrits -->
+        <div class="col-md-4">
+            <div class="card" style="border: 2px solid var(--beige-light);">
+                <div class="card-body p-4 text-center">
+                    <div style="font-size: 2.5rem; color: #5B8C5A; margin-bottom: 1rem;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 style="font-size: 2.2rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem;">
+                        <?php echo $stats['utilisateurs']; ?>
+                    </h3>
+                    <p style="color: var(--text-medium); font-size: 1rem; margin: 0;">
+                        Utilisateur(s) inscrit(s)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Échanges effectués -->
+        <div class="col-md-4">
+            <div class="card" style="border: 2px solid var(--beige-light);">
+                <div class="card-body p-4 text-center">
+                    <div style="font-size: 2.5rem; color: #6B7FBD; margin-bottom: 1rem;">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <h3 style="font-size: 2.2rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem;">
+                        <?php echo $stats['echanges']; ?>
+                    </h3>
+                    <p style="color: var(--text-medium); font-size: 1rem; margin: 0;">
+                        Échange(s) effectué(s)
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 

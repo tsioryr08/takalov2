@@ -68,9 +68,11 @@ class AdminController
         
         $pdo = Flight::db();
         
-        // Statistiques - UNIQUEMENT categories
+        // Statistiques
         $stats = [
-            'categories' => $pdo->query("SELECT COUNT(*) FROM categorie")->fetchColumn()
+            'categories' => $pdo->query("SELECT COUNT(*) FROM categorie")->fetchColumn(),
+            'utilisateurs' => $pdo->query("SELECT COUNT(*) FROM utilisateur")->fetchColumn(),
+            'echanges' => $pdo->query("SELECT COUNT(*) FROM historique_echange")->fetchColumn()
         ];
         
         Flight::render('admin/dashboard_simple', [

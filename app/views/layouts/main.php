@@ -231,7 +231,7 @@
                 <div class="col-md-12">
                     <div style="background-color: rgba(255,255,255,0.2); padding: 1rem; border-radius: 8px; display: inline-block;">
                         
-                        <small>ETU004184 - ETU003966 - ETU003941</small>
+                        <small>ETU004184:Tsiory - ETU003966:Njary - ETU003941:Onja</small>
                     </div>
                 </div>
                 <div class="col-md-12 mt-3">
